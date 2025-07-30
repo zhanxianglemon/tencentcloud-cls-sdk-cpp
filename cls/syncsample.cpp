@@ -1,21 +1,21 @@
 
 #include "cls/client.h"
 #include "cls/common.h"
-#include "cls/cls_logs.pb.h"
+#include "cls_logs.pb.h"
 #include <string>
 #include <iostream>
-#include <unistd.h>
+//#include <unistd.h>
 #include <memory>
 using namespace tencent_log_sdk_cpp_v2;
 using namespace std;
 int main(int argc,char ** argv)
 {
     //eg:内网域名：ap-guangzhou.cls.tencentyun.com
-    //eg:外网域名：ap-guangzhou.cls.tencentcs.com
-    string endpoint = "ap-guangzhou.cls.tencentcs.com";
+    //eg:外网域名：
+    string endpoint = "";
     string accessKeyId = "";
     string accessKey = "";
-    string topic = "";
+    string topic = "cls-sdk-windows";
     string token = "";
     std::shared_ptr<LOGClient> ptr= std::make_shared<LOGClient>(endpoint,accessKeyId,accessKey,LOG_REQUEST_TIMEOUT,LOG_CONNECT_TIMEOUT,token,"127.0.0.1",true);
     cls::LogGroup loggroup;

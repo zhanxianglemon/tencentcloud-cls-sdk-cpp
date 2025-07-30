@@ -1,11 +1,11 @@
 
 #include "cls/producerclient.h"
 #include "cls/common.h"
-#include "cls/cls_logs.pb.h"
-#include "cls/logproducerconfig.pb.h"
+#include "cls_logs.pb.h"
+#include "logproducerconfig.pb.h"
 #include <string>
 #include <iostream>
-#include <unistd.h>
+//#include <unistd.h>
 #include "cls/result.h"
 #include "cls/error.h"
 using namespace tencent_log_sdk_cpp_v2;
@@ -29,10 +29,11 @@ public:
 int main()
 {
     cls_config::LogProducerConfig config;
-    config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
+    config.set_endpoint("ap-guangzhou.cls.tencentyun.com");
     config.set_acceskeyid("");
     config.set_accesskeysecret("");
     std::string topic = "";
+
     auto client = std::make_shared<ProducerClient>(config);
     auto callback = std::make_shared<UserResult>();
     client->Start();
@@ -44,7 +45,7 @@ int main()
     content->set_value("this my test");
     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
     if(ret.statusCode != 0){
-        cout<<ret.content<<endl;
+        cout<<ret.content<<endl; 
     }
     client->LogProducerEnvDestroy();
 

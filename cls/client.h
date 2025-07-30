@@ -9,7 +9,8 @@
 
 #include "rapidjson/writer.h"
 #include "rapidjson/document.h"
-#include <pthread.h>
+//#include <pthread.h>
+//#include <windows.h> // For SRWLOCK
 #include "curl/curl.h"
 #include "result.h"
 
@@ -91,7 +92,8 @@ protected:
     int64_t mConnectTimeout;
     int32_t mLogMaxSize;
     std::string mUserAgent;
-    pthread_mutex_t mMutexLock;
+    //pthread_mutex_t mMutexLock;
+    SRWLOCK mMutexLock;
     std::string (*mGetDateString)();
     void (*mLOGSend)(const std::string& httpMethod, const std::string& host, const int32_t port, const std::string& url,
                      const std::string& queryString, const std::map<std::string, std::string>& header,

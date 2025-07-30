@@ -38,8 +38,11 @@ private:
     std::atomic_bool shutdownflag_;
     std::shared_ptr<LogMemMgr> logmgr_;
     std::shared_ptr<LogRetryQueue> retryqueue_;
-    const cls_config::LogProducerConfig& config_;
+
     std::shared_ptr<LOGClient> logclient_;
+
+    const cls_config::LogProducerConfig& config_;
+    //std::shared_ptr<LOGClient> logclient_;
 };
 } // namespace tencent_log_sdk_cpp_v2
 

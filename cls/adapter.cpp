@@ -1,8 +1,11 @@
 #include "adapter.h"
 #include "utils.h"
 #include <iostream>
-#include <sys/time.h>
-
+//#include <sys/time.h>
+#include <windows.h>
+#include <sstream>
+#include <ctime>
+#include <iomanip>
 using namespace std;
 
 namespace tencent_log_sdk_cpp_v2
@@ -112,7 +115,8 @@ std::string CodecTool::GetDateString(const std::string& dateFormat)
     time(&now_time);
     char buffer[128] = {'\0'};
     tm timeInfo;
-    gmtime_r(&now_time, &timeInfo);
+    //gmtime_r(&now_time, &timeInfo);
+    gmtime_s(&timeInfo, &now_time);
     strftime(buffer, 128, dateFormat.c_str(), &timeInfo);
     return string(buffer);
 }
@@ -125,16 +129,40 @@ time_t CodecTool::DecodeDateString(const std::string dateString, const std::stri
     struct tm t;
     memset(&t, 0, sizeof(t));
     t.tm_sec = -1;
-    strptime(dateString.c_str(), dateFormat.c_str(), &t);
-    if (t.tm_sec == -1)
-    {
+    std::istringstream iss(dateString);
+    iss >> std::get_time(&t, dateFormat.c_str());
+
+    if (iss.fail()) {
         throw LOGException(LOGE_PARAMETER_INVALID,
-                           string("Invalid date string:") + dateString + ",format:" + dateFormat);
+            std::string("Invalid date string:") + dateString + ", format:" + dateFormat);
     }
-    struct timezone tz;
-    struct timeval tv;
-    gettimeofday(&tv, &tz);
-    return mktime(&t) - tz.tz_minuteswest * 60;
+
+    time_t utcTime = _mkgmtime(&t);
+    if (utcTime == -1) {
+        throw LOGException(LOGE_PARAMETER_INVALID,
+            std::string("Failed to convert tm to time_t for date string:") + dateString + ", format:" + dateFormat);
+    }
+
+    // 获取当前时区偏移（分钟）
+    TIME_ZONE_INFORMATION tzInfo;
+    DWORD tzResult = GetTimeZoneInformation(&tzInfo);
+    if (tzResult == TIME_ZONE_ID_INVALID) {
+        tzInfo.Bias = 0;
+    }
+
+    int tzOffsetMinutes = -tzInfo.Bias; 
+    time_t localTime = utcTime - static_cast<long long>(tzOffsetMinutes) * 60;
+    return localTime;
+    //strptime(dateString.c_str(), dateFormat.c_str(), &t);
+    //if (t.tm_sec == -1)
+    //{
+    //    throw LOGException(LOGE_PARAMETER_INVALID,
+    //                       string("Invalid date string:") + dateString + ",format:" + dateFormat);
+    //}
+    //struct timezone tz;
+    //struct timeval tv;
+    //gettimeofday(&tv, &tz);
+    //return mktime(&t) - tz.tz_minuteswest * 60;
 }
 
 bool CodecTool::StartWith(const std::string& input, const std::string& pattern)

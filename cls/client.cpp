@@ -5,24 +5,34 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-#include <sys/ioctl.h>
-#include <arpa/inet.h>
 #include <iostream>
 #include <curl/curl.h>
-#include <unistd.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <net/if_arp.h>
+
+//#include <unistd.h>
+//#include <sys/ioctl.h>
+//#include <arpa/inet.h>
+//#include <netdb.h>
+//#include <sys/socket.h>
+//#include <netinet/in.h>
+//#include <sys/ioctl.h>
+//#include <net/if.h>
+//#include <net/if_arp.h>
+
+
+#include <winioctl.h>
+#include <winsock2.h>
+#include <iphlpapi.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+
 #include <string>
 #include <cstdlib>
-
-#include <iostream>
 #include <cstdio>
 
 #define ETH_NAME "eth0"
+
+#pragma comment(lib, "iphlpapi.lib")
+#pragma comment(lib,"ws2_32.lib")
 
 using namespace std;
 using namespace rapidjson;
@@ -31,19 +41,28 @@ extern const char* const tencent_log_sdk_cpp_v2::LOG_SDK_IDENTIFICATION = "tence
 
 static string GetHostIpByHostName()
 {
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        return string();
+    }
+
     char hostname[255];
     gethostname(hostname, 255);
-    struct hostent* entry = gethostbyname(hostname);
+    struct hostent *entry = gethostbyname(hostname);
+
     if (entry == NULL)
     {
+        WSACleanup();
         return string();
     }
     struct in_addr* addr = (struct in_addr*)entry->h_addr_list[0];
     if (addr == NULL)
     {
+        WSACleanup();
         return string();
     }
     char* ipaddr = inet_ntoa(*addr);
+    WSACleanup();
     if (ipaddr == NULL)
     {
         return string();
@@ -52,37 +71,94 @@ static string GetHostIpByHostName()
 }
 
 
+//static string GetHostIpByETHName()
+//{
+//    int sock;
+//    struct sockaddr_in sin;
+//    struct ifreq ifr;
+//
+//    sock = socket(AF_INET, SOCK_DGRAM, 0);
+//    if (sock == -1)
+//    {
+//        return string();
+//    }
+//
+//    // use eth0 as the default ETH name
+//    strncpy(ifr.ifr_name, "eth0", IFNAMSIZ);
+//    ifr.ifr_name[IFNAMSIZ - 1] = 0;
+//
+//    if (ioctl(sock, SIOCGIFADDR, &ifr) < 0)
+//    {
+//        close(sock); //added by gaolei 13-10-09
+//        return string();
+//    }
+//
+//    memcpy(&sin, &ifr.ifr_addr, sizeof(sin));
+//
+//    char* ipaddr = inet_ntoa(sin.sin_addr);
+//    close(sock); //added by gaolei 13-10-09
+//    if (ipaddr == NULL)
+//    {
+//        return string();
+//    }
+//    return string(ipaddr);
+//}
 static string GetHostIpByETHName()
 {
-    int sock;
-    struct sockaddr_in sin;
-    struct ifreq ifr;
-
-    sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock == -1)
-    {
+    // Windows下获取本地网卡IP地址
+    ULONG bufLen = 0;
+    if (GetAdaptersAddresses(AF_UNSPEC,
+        GAA_FLAG_INCLUDE_GATEWAYS,
+        NULL,
+        NULL,
+        &bufLen) != ERROR_BUFFER_OVERFLOW) {
         return string();
     }
 
-    // use eth0 as the default ETH name
-    strncpy(ifr.ifr_name, "eth0", IFNAMSIZ);
-    ifr.ifr_name[IFNAMSIZ - 1] = 0;
-
-    if (ioctl(sock, SIOCGIFADDR, &ifr) < 0)
-    {
-        close(sock); //added by gaolei 13-10-09
+    PIP_ADAPTER_ADDRESSES pAddresses = (PIP_ADAPTER_ADDRESSES)malloc(bufLen);
+    if (pAddresses == NULL) {
         return string();
     }
 
-    memcpy(&sin, &ifr.ifr_addr, sizeof(sin));
-
-    char* ipaddr = inet_ntoa(sin.sin_addr);
-    close(sock); //added by gaolei 13-10-09
-    if (ipaddr == NULL)
-    {
+    if (GetAdaptersAddresses(AF_UNSPEC,
+        GAA_FLAG_INCLUDE_GATEWAYS,
+        NULL,
+        pAddresses,
+        &bufLen) != NO_ERROR) {
+        free(pAddresses);
         return string();
     }
-    return string(ipaddr);
+
+    string ip;
+    for (PIP_ADAPTER_ADDRESSES pCurr = pAddresses; pCurr != NULL; pCurr = pCurr->Next) {
+        // 跳过回环适配器和未启用的适配器
+        if (pCurr->IfType == IF_TYPE_SOFTWARE_LOOPBACK ||
+            pCurr->OperStatus != IfOperStatusUp) {
+            continue;
+        }
+
+        // 遍历所有单播地址
+        for (PIP_ADAPTER_UNICAST_ADDRESS ua = pCurr->FirstUnicastAddress;
+            ua != NULL;
+            ua = ua->Next) {
+
+            if (ua->Address.lpSockaddr->sa_family == AF_INET) {
+                sockaddr_in* sa_in = (sockaddr_in*)ua->Address.lpSockaddr;
+                char buf[INET_ADDRSTRLEN] = { 0 };
+                if (inet_ntop(AF_INET, &(sa_in->sin_addr), buf, INET_ADDRSTRLEN) != NULL) {
+                    // 排除回环地址
+                    if (strcmp(buf, "127.0.0.1") != 0) {
+                        ip = buf;
+                        free(pAddresses);
+                        return ip;
+                    }
+                }
+            }
+        }
+    }
+
+    free(pAddresses);
+    return string(); // 没有找到合适的IP
 }
 
 static string GetHostIp()
@@ -248,7 +324,8 @@ LOGClient::LOGClient(const std::string& clsHost, const std::string& accessKeyId,
       mTimeout(timeout), mConnectTimeout(connecttimeout), mSecurityToken(token),mUserAgent(LOG_SDK_IDENTIFICATION),
       mGetDateString(CodecTool::GetDateString), mLOGSend(LOGAdapter::Send)
 {
-    pthread_mutex_init(&mMutexLock, NULL);
+    //pthread_mutex_init(&mMutexLock, NULL);
+    InitializeSRWLock(&mMutexLock);
     SetClsHost(clsHost);
     if (mSource == "")
     {
@@ -265,21 +342,26 @@ LOGClient::LOGClient(const std::string& clsHost, const std::string& accessKeyId,
 
 LOGClient::~LOGClient()
 {
-    pthread_mutex_destroy(&mMutexLock);
+    //pthread_mutex_destroy(&mMutexLock);
 }
 
 
 string LOGClient::GetClsHost()
 {
-    pthread_mutex_lock(&mMutexLock);
+    //共享锁
+    //pthread_mutex_lock(&mMutexLock);
+    AcquireSRWLockShared(&mMutexLock);
     string clsHost = mClsHost;
-    pthread_mutex_unlock(&mMutexLock);
+    //pthread_mutex_unlock(&mMutexLock);
+    ReleaseSRWLockShared(&mMutexLock);
     return clsHost;
 }
 
 void LOGClient::SetClsHost(const string& clsHost)
 {
-    pthread_mutex_lock(&mMutexLock);
+    //排他锁
+    //pthread_mutex_lock(&mMutexLock);
+    AcquireSRWLockExclusive(&mMutexLock);
     size_t bpos = clsHost.find("://");
     if (bpos == string::npos)
         bpos = 0;
@@ -292,7 +374,8 @@ void LOGClient::SetClsHost(const string& clsHost)
     string host = tmpstr.substr(0, epos);
 
     mClsHost = host;
-    pthread_mutex_unlock(&mMutexLock);
+    //pthread_mutex_unlock(&mMutexLock);
+    ReleaseSRWLockExclusive(&mMutexLock);
 }
 
 void LOGClient::SetCommonHeader(map<string, string>& httpHeader, int32_t contentLength)

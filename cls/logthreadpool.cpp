@@ -14,6 +14,7 @@ ThreadPool::ThreadPool(std::shared_ptr<LogMemMgr>& mgr, std::shared_ptr<LogRetry
     logclient_ = std::make_shared<LOGClient>(config_.endpoint(), config_.acceskeyid(), config_.accesskeysecret(),
                                              config.socktimeout(), config.connecttimeout(),config_.token(),config_.source(),
                                              config_.compressflag());
+
 }
 
 int ThreadPool::Start()

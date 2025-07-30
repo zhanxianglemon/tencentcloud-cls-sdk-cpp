@@ -3,16 +3,19 @@
 #include "cls_logs.pb.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h> // inet_ntop
-#include <netdb.h>
+//#include <unistd.h>
+//#include <sys/socket.h>
+//#include <netinet/in.h>
+//#include <arpa/inet.h> // inet_ntop
+//#include <netdb.h>
+#include <winsock2.h>
+#include <windows.h>
+#include <ws2tcpip.h>
+
 #include <string.h> // bzero
 #include <errno.h>
 #include "error.h"
-
-
+#pragma comment(lib,"ws2_32.lib")
 namespace tencent_log_sdk_cpp_v2
 {
 ErrCode GetLogContentSize(const cls::Log& log,int64_t& sizeInBytes);

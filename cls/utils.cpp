@@ -1,9 +1,11 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "cls_logs.pb.h"
 #include <string>
 #include <chrono>
 #include <ctime>
-#include <sys/time.h>
+//#include <sys/time.h>
 #include "utils.h"
+
 using namespace std::chrono;
 using namespace std;
 
@@ -83,7 +85,8 @@ void GetSelfServerIP(char* pszIP)
 {
     struct addrinfo *answer, hint, *curr;
     //char szIP[16];
-    bzero(&hint, sizeof(hint));
+    //bzero(&hint, sizeof(hint));
+	memset(&hint, 0, sizeof(hint));
     hint.ai_family = AF_INET;
     hint.ai_socktype = SOCK_STREAM;
 
