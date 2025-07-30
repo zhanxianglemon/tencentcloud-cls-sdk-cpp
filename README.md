@@ -181,8 +181,8 @@ int main(int argc,char ** argv)
 ```	
 
 ### 安装：
-- 统一使用vcpkg包管理器进行依赖库管理，可以配合vs联合使用，省略交叉编译和配置环境变量等过程。
-	- 依赖安装：
+#### 统一使用vcpkg包管理器进行依赖库管理，可以配合vs联合使用，省略交叉编译和配置环境变量等过程。
+- 依赖安装：
 ```shell
 #使用cpkg进行安装
 git clone https://github.com/microsoft/vcpkg.git 
@@ -202,8 +202,8 @@ cd vcpkg
 #如果没有进行集成，可以在vs中是手动配置参考http://www.cppcns.com/ruanjian/c/712786.html
 ```
 
-	- protobuf验证：
-		 - contacts.proto 文件
+- protobuf验证：
+	- contacts.proto 文件
 
 ```c++
 // 首行：语法指定行（proto2）
@@ -217,7 +217,7 @@ message PeopleInfo {
 }
 ```
 
-		- test.cc 文件
+	- test.cc 文件
 
 ```c++
 #include <iostream> 
@@ -317,8 +317,6 @@ int main() {
 }
 ```
 
-	
-	
 
 - ### 代码说明
 
