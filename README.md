@@ -172,13 +172,13 @@ int main(int argc,char ** argv)
 - 安装时候出现error2503（Windows server大部分情况下没有管理员权限）
 	- 解决方法：
 
-	```shell
+```shell
 管理员命令行安装
 复制安装包到c盘
 1.运行CMD（以管理员权限运行）
 2.进入c盘根目录
 3.输入以下命令： msiexec /package "your_package_name.msi"
-	```	
+```	
 
 ### 安装：
 - 统一使用vcpkg包管理器进行依赖库管理，可以配合vs联合使用，省略交叉编译和配置环境变量等过程。
@@ -255,7 +255,7 @@ int main() {
 ```
 
 	- boost验证：
-    
+
 ```c++
 #include <IOStream>
 #include <fstream>
