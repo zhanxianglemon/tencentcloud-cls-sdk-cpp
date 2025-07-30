@@ -23,8 +23,8 @@ tencent-log-sdk-cpp 是C++用户日志结构化上传的SDK，采用轻量的设
 
 - step1:使用vs打开代码目录
 - step2:配置release编译器
-- step3:生产解决方案
-- step3:生成并运行启动器
+- step3:生成解决方案
+- step3:生成可执行文件、配置启动器并运行
 
 #### 配置说明logproducerconfig.proto
 
@@ -109,8 +109,8 @@ int main()
 
 - step1:使用vs打开代码目录
 - step2:配置release编译器
-- step3:生产解决方案
-- step3:生成并运行启动器
+- step3:生成解决方案
+- step3:生成可执行文件、配置启动器并运行
 
 #### 同步demo: syncsample.cpp 
 
