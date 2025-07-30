@@ -4,7 +4,8 @@ tencent-log-sdk-cpp 是C++用户日志结构化上传的SDK，采用轻量的设
 
 ## 如何使用
 
-### 依赖
+### 依赖（具体安装见末尾）
+
 - 使用vs2022或其他版本
 - 使用vcpkg进行统一管理进行安装
 - `protobuf` 
@@ -23,8 +24,8 @@ tencent-log-sdk-cpp 是C++用户日志结构化上传的SDK，采用轻量的设
 
 - step1:使用vs打开代码目录
 - step2:配置release编译器
-- step3:生成解决方案
-- step3:生成可执行文件、配置启动器并运行
+- step3:生产解决方案
+- step3:生成并运行启动器
 
 #### 配置说明logproducerconfig.proto
 
@@ -109,8 +110,8 @@ int main()
 
 - step1:使用vs打开代码目录
 - step2:配置release编译器
-- step3:生成解决方案
-- step3:生成可执行文件、配置启动器并运行
+- step3:生产解决方案
+- step3:生成并运行启动器
 
 #### 同步demo: syncsample.cpp 
 
@@ -176,7 +177,141 @@ int main(int argc,char ** argv)
 1.运行CMD（以管理员权限运行）
 2.进入c盘根目录
 3.输入以下命令： msiexec /package "your_package_name.msi"
-	```
+	```	
+### 安装：
+- 统一使用vcpkg包管理器进行依赖库管理，可以配合vs联合使用，省略交叉编译和配置环境变量等过程。
+	- 依赖安装：
+```
+#使用cpkg进行安装
+git clone https://github.com/microsoft/vcpkg.git 
+cd vcpkg
+.\bootstrap-vcpkg.bat
+#查看依赖库版本列表
+.\vcpkg search package_name
+#安装boost  （时间比较长） 
+.\vcpkg install boost
+#安装protobuf
+.\vcpkg install protobuf
+#安装测试环境
+.\vcpkg install gtest
+.\vcpkg install benchmark
+#集成到 Visual Studio   强烈推荐，可以省略配置vs
+.\vcpkg integrate install
+#如果没有进行集成，可以在vs中是手动配置参考http://www.cppcns.com/ruanjian/c/712786.html
+```
+	- protobuf验证：
+		 - contacts.proto 文件
+```
+// 首行：语法指定行（proto2）
+syntax = "proto2";
+package contacts;
+
+// 定义联系人message
+message PeopleInfo {
+  optional string name = 1;  // 姓名（proto2 必须声明 required/optional/repeated）
+  optional int32 age = 2;    // 年龄（proto2 必须声明 required/optional/repeated）
+}
+```
+		- test.cc 文件
+```
+#include <iostream> 
+#include "contacts.pb.h"
+
+int main() { 
+    std::string people_str; 
+
+    {
+        // 对⼀个联系⼈的信息使⽤ PB 进⾏序列化，并将结果打印出来。
+        contacts::PeopleInfo people; 
+        people.set_name("张珊"); 
+        people.set_age(20); 
+        if (!people.SerializeToString(&people_str)) { 
+            std::cerr << "序列化联系⼈失败！" << std::endl; 
+            return -1;
+        }
+        std::cout << "序列化成功，结果：" << people_str << std::endl; 
+    }
+    
+    {
+        // 对序列化后的内容使⽤ PB 进⾏反序列，解析出联系⼈信息并打印出来。
+        contacts::PeopleInfo people; 
+        if (!people.ParseFromString(people_str)) { 
+            std::cerr << "反序列化联系⼈失败！" << std::endl; 
+            return -1;
+        } 
+        std::cout << "反序列化成功！" << std::endl
+                  << "姓名： " << people.name() << std::endl
+                  << "年龄： " << people.age() << std::endl;
+    }
+
+    return 0;
+}
+```
+
+	- boost验证：
+```
+#include <IOStream>
+#include <fstream>
+#include <boost/filesystem.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+ 
+namespace fs = boost::filesystem;
+namespace pt = boost::posix_time;
+ 
+void print_directory(const fs::path& dir) {
+     try {
+         if (fs::exists(dir)) {
+             std::cout << "目录内容: " << dir << "\n";
+             for (const auto& entry : fs::directory_iterator(dir)) {
+                 std::cout << " " << entry.path().filename() << std::endl;
+             }
+         }
+     }
+     catch (const fs::filesystem_error& e) {
+         std::cerr << "文件系统错误: " << e.what() << std::endl;
+     }
+}
+ 
+int main() {
+     // 1. 文件系统操作
+     fs::path current_dir = fs::current_path();
+     std::cout << "当前工作目录: " << current_dir << "\n\n";
+ 
+     // 创建测试目录
+     fs::create_directories("test_dir/data");
+     std::ofstream("test_dir/sample.txt") << "Boost测试文件";
+ 
+     // 列出目录内容
+     print_directory("test_dir");
+ 
+     // 2. 日期时间操作
+     pt::ptime now = pt::second_clock::local_time();
+     pt::time_duration td = now.time_of_day();
+ 
+     std::cout << "\n当前时间: "
+         << now.date().year() << "-"
+         << std::setw(2) << std::setfill('0') << now.date().month().as_number() << "-"
+         << std::setw(2) << now.date().day() << " "
+         << td.hours() << ":" << td.minutes() << ":" << td.seconds()
+         << std::endl;
+ 
+     // 3. 路径操作演示
+     fs::path p("test_dir/data/file.dat");
+     std::cout << "\n路径分解演示:\n"
+         << "根目录: " << p.root_name() << "\n"
+         << "相对路径: " << p.relative_path() << "\n"
+         << "父目录: " << p.parent_path() << "\n"
+         << "文件名: " << p.filename() << std::endl;
+ 
+     // 清理测试目录
+     fs::remove_all("test_dir");
+ 
+     return 0;
+}
+```
+
+	
+	
 
 - ### 代码说明
 
