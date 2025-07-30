@@ -1,6 +1,6 @@
 #include "logtimer.h"
 #include "utils.h"
-
+#include "boost/thread/lock_types.hpp"
 #include <thread>
 
 namespace tencent_log_sdk_cpp_v2

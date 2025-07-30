@@ -1,4 +1,7 @@
+#define _CRT_SECURE_NO_WARNINGS
+#define OPENSSL_SUPPRESS_DEPRECATED 1
 #include "signature.h"
+ 
 
 namespace tencent_log_sdk_cpp_v2{
 std::string sha1(const void *data, size_t len) {
@@ -42,7 +45,8 @@ std::string hmac_sha1(const char *key, const void *data, size_t len) {
 std::string urlencode(const char *s) {
     static unsigned char hexchars[] = "0123456789ABCDEF";
     size_t length = strlen(s), pos = 0;
-    unsigned char c_url[length*3+1];
+    //unsigned char c_url[length*3+1];
+    unsigned char *c_url = new unsigned char[length * 3 + 1];
     const unsigned char *p = (const unsigned char *)s;
     for (; *p; ++p) {
         if (isalnum((unsigned char)*p) || (*p == '-') ||
@@ -50,8 +54,8 @@ std::string urlencode(const char *s) {
             c_url[pos++] = *p;
         } else {
             c_url[pos++] = '%';
-            c_url[pos++] = hexchars[(*p)>>4];
-            c_url[pos++] = hexchars[(*p)&15U];
+            c_url[pos++] = hexchars[(*p) >> 4];
+            c_url[pos++] = hexchars[(*p) & 15U];
         }
     }
     c_url[pos] = 0;

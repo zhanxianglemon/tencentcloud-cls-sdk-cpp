@@ -1,52 +1,51 @@
-cmake_minimum_required(VERSION 2.6)
-project(tencent-log-sdk-cpp)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-deprecated-declarations" )
+cmake_minimum_required(VERSION 3.15)
+set(VCPKG_TARGET_TRIPLET "x64-windows")
+set(CMAKE_TOOL_CHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+project(tencent-log-sdk-cpp-windows)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-Wno-template-body)
+endif()
+
+set(CMAKE_CXX_FLAGS "-std=c++11")
 
 find_package(Protobuf REQUIRED)
+find_package(CURL REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(OpenSSL REQUIRED)
 
-include_directories(${PROTOBUF_INCLUDE_DIRS})
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS cls_logs.proto logproducerconfig.proto)
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-set(SRC_LISTS
-    cls/client.cpp
-    cls/adapter.cpp
-    cls/common.cpp
-    lz4/lz4.c
-    cls/signature.cpp
-    cls/logthreadpool.cpp
-    cls/batchloggroup.cpp
-    cls/logaccumulator.cpp
-    cls/logtimer.cpp
-    cls/utils.cpp
-    cls/producerclient.cpp
-    cls/result.h
-    cls/logmemmgr.cpp
-    cls/logretryqueue.cpp
-    ${PROTO_SRCS}
+include_directories(./)
+include_directories(./x64-windows/include)
+
+#set(PROTO_FILE
+#        "${CMAKE_SOURCE_DIR}/cls_logs.proto"
+#        "${CMAKE_SOURCE_DIR}/logproducerconfig.proto")
+#protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS
+#    ${PROTO_FILE})
+
+
+aux_source_directory(cls src)
+aux_source_directory(lz4 src)
+aux_source_directory(rapidjson src)
+
+add_executable(cls ${src} cls_logs.pb.cc logproducerconfig.pb.cc)
+
+target_link_libraries(cls PRIVATE protobuf::libprotobuf)
+target_link_libraries(cls PRIVATE CURL::libcurl)
+target_link_libraries(cls PRIVATE Boost::boost)
+target_link_libraries(cls PRIVATE Boost::system)
+target_link_libraries(cls PRIVATE Boost::thread)
+target_link_libraries(cls PRIVATE OpenSSL::SSL)
+target_link_libraries(cls PRIVATE OpenSSL::Crypto)
+
+if(MSVC)
+    set_target_properties(cls PROPERTIES COMPILE_FLAGS "/EHsc") 
+else()
+    set_target_properties(cls PROPERTIES COMPILE_FLAGS "-fexceptions")  
+endif()
+
+target_compile_definitions(cls PRIVATE
+        BOOST_THROW_EXCEPTION
+        BOOST_SYSTEM_NO_DEPRECATED
 )
-add_library(clssdk_static
-    STATIC
-    ${SRC_LISTS})
-
-add_library(clssdk_shared
-    SHARED
-    ${SRC_LISTS})
-
-set_target_properties (clssdk_static PROPERTIES OUTPUT_NAME "clssdk")
-set_target_properties (clssdk_shared PROPERTIES OUTPUT_NAME "clssdk")
-
-install(TARGETS clssdk_static clssdk_shared
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib)
-
-
-install(FILES cls/client.h cls/RestfulApiCommon.h cls/common.h 
-    cls/producerclient.h cls/result.h cls/common.h cls/logthreadpool.h 
-    cls/batchloggroup.h cls/logmemmgr.h cls/logaccumulator.h cls/logtimer.h
-    cls/logretryqueue.h cls/logthreadpool.h cls/error.h ${PROTO_HDRS}
-    DESTINATION include/cls)
-
-install(DIRECTORY rapidjson
-    DESTINATION include)
-

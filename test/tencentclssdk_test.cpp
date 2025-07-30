@@ -2,17 +2,15 @@
 #include <benchmark/benchmark.h>
 #include <string>
 #include <iostream>
-#include <unistd.h>
 
-#include "producerclient.h"
-#include "common.h"
+#include "cls/producerclient.h"
+#include "cls/common.h"
 #include "cls_logs.pb.h"
 #include "logproducerconfig.pb.h"
 #include <string>
 #include <iostream>
-#include <unistd.h>
-#include "result.h"
-#include "error.h"
+#include "cls/result.h"
+#include "cls/error.h"
 using namespace tencent_log_sdk_cpp_v2;
 using namespace std;
 
@@ -25,527 +23,524 @@ public:
     void Success(PostLogStoreLogsResponse result) override { std::cout << result.Printf() << std::endl; }
     void Fail(PostLogStoreLogsResponse result) override { std::cout << result.Printf() << std::endl; }
 };
-// /*
-// æµ‹è¯•ï¼šæŒ‰ç…§è´Ÿè½½å‡è¡¡æ¨¡å¼ä¸Šä¼ æ—¥å¿—
-// é¢„æœŸç»“æœï¼šret.statusCodeè¿”å›200ok
-// */
-// // TEST(tencent_log_sdk_test, load_balancing)
-// // {
-// //     std::cout << "ProducerClientå¼€å§‹å¯åŠ¨" << endl;
-// //     cls_config::LogProducerConfig config;
-// //     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-// //     config.set_acceskeyid("");
-// //     config.set_accesskeysecret("");
-// //     // config.set_lingerms(0);
-// //     auto client = std::make_shared<ProducerClient>(config);
-// //     client->Start();
-// //     cls::Log log;
-// //     log.set_time(time(NULL));
-// //     auto content = log.add_contents();
-// //     content->set_key("content");
-// //     content->set_value("this my test log");
-// //     std::string topic = "";
-// //     // std::string topic = "123";
-// //     auto callback = std::make_shared<UserResult>();
-// //     for (int i = 0; i < 2; ++i)
-// //     {
-// //         PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-// //         std::cout << ret.Printf() << std::endl;
-// //     }
-// //     client->LogProducerEnvDestroy();
-// // }
+ /*
+ ²âÊÔ£º°´ÕÕ¸ºÔØ¾ùºâÄ£Ê½ÉÏ´«ÈÕÖ¾
+ Ô¤ÆÚ½á¹û£ºret.statusCode·µ»Ø200ok
+ */
+  TEST(tencent_log_sdk_test, load_balancing)
+  {
+      std::cout << "ProducerClient¿ªÊ¼Æô¶¯" << endl;
+      cls_config::LogProducerConfig config;
+      config.set_endpoint("");
+      config.set_acceskeyid("");
+      config.set_accesskeysecret("");
+      // config.set_lingerms(0);
+      auto client = std::make_shared<ProducerClient>(config);
+      client->Start();
+      cls::Log log;
+      log.set_time(time(NULL));
+      auto content = log.add_contents();
+      content->set_key("content");
+      content->set_value("this my test log");
+      std::string topic = "";
+      auto callback = std::make_shared<UserResult>();
+      for (int i = 0; i < 2; ++i)
+      {
+          PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+          std::cout << ret.Printf() << std::endl;
+      }
+      client->LogProducerEnvDestroy();
+  }
 
 
-// /*
-// æµ‹è¯•ï¼šé…ç½®åˆæ³•æ€§æ ¡éªŒï¼Œè‹¥å†…å­˜å°äºç­‰äº0
-// é¢„æœŸç»“æœï¼šåˆ™ä½¿ç”¨é»˜è®¤å€¼totalsizelnbytes=104857600
-// */
-// TEST(tencent_log_sdk_test, config_totalsizelnbytes)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid("");
-//     config.set_accesskeysecret("");
-//     config.set_totalsizelnbytes(0);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     EXPECT_EQ(config.totalsizelnbytes(), 104857600);
-// }
+ /*
+ ²âÊÔ£ºÅäÖÃºÏ·¨ĞÔĞ£Ñé£¬ÈôÄÚ´æĞ¡ÓÚµÈÓÚ0
+ Ô¤ÆÚ½á¹û£ºÔòÊ¹ÓÃÄ¬ÈÏÖµtotalsizelnbytes=104857600
+ */
+ TEST(tencent_log_sdk_test, config_totalsizelnbytes)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     config.set_totalsizelnbytes(0);
+     auto client = std::make_shared<ProducerClient>(config);
+     EXPECT_EQ(config.totalsizelnbytes(), 104857600);
+ }
 
-// /*
-// æµ‹è¯•ï¼šé…ç½®åˆæ³•æ€§æ ¡éªŒï¼Œå¹¶å‘æ•°å°äº0
-// é¢„æœŸç»“æœï¼šåˆ™ä½¿ç”¨é»˜è®¤çš„å¹¶å‘é…ç½®maxsendworkercount=50
-// */
-// TEST(tencent_log_sdk_test, config_maxsendworkercount)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid("");
-//     config.set_accesskeysecret("");
-//     config.set_maxsendworkercount(0);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     EXPECT_EQ(config.maxsendworkercount(), 50);
-// }
+ /*
+ ²âÊÔ£ºÅäÖÃºÏ·¨ĞÔĞ£Ñé£¬²¢·¢ÊıĞ¡ÓÚ0
+ Ô¤ÆÚ½á¹û£ºÔòÊ¹ÓÃÄ¬ÈÏµÄ²¢·¢ÅäÖÃmaxsendworkercount=50
+ */
+ TEST(tencent_log_sdk_test, config_maxsendworkercount)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     config.set_maxsendworkercount(0);
+     auto client = std::make_shared<ProducerClient>(config);
+     EXPECT_EQ(config.maxsendworkercount(), 50);
+ }
 
-// /*
-// æµ‹è¯•ï¼šé…ç½®åˆæ³•æ€§æ ¡éªŒï¼Œç´¯è®¡çš„batchsizeå°äºç­‰äº0
-// é¢„æœŸç»“æœï¼šåˆ™ä½¿ç”¨é»˜è®¤å€¼maxbatchsize=5M
-// */
-// TEST(tencent_log_sdk_test, config_maxbatchsize_0)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid("");
-//     config.set_accesskeysecret("");
-//     config.set_maxbatchsize(0);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     EXPECT_EQ(config.maxbatchsize(), 5242880);
-// }
+ /*
+ ²âÊÔ£ºÅäÖÃºÏ·¨ĞÔĞ£Ñé£¬ÀÛ¼ÆµÄbatchsizeĞ¡ÓÚµÈÓÚ0
+ Ô¤ÆÚ½á¹û£ºÔòÊ¹ÓÃÄ¬ÈÏÖµmaxbatchsize=5M
+ */
+ TEST(tencent_log_sdk_test, config_maxbatchsize_0)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     config.set_maxbatchsize(0);
+     auto client = std::make_shared<ProducerClient>(config);
+     EXPECT_EQ(config.maxbatchsize(), 5242880);
+ }
 
-// /*
-// æµ‹è¯•ï¼šé…ç½®åˆæ³•æ€§æ ¡éªŒï¼Œç´¯è®¡çš„batchsizeå¤§å°è¶…è¿‡5M
-// é¢„æœŸç»“æœï¼šåˆ™ä½¿ç”¨é»˜è®¤å€¼totalsizelnbytes=104857600
-// */
-// TEST(tencent_log_sdk_test, config_maxbatchsize_max)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid("");
-//     config.set_accesskeysecret("");
-//     config.set_maxbatchsize(5242881);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     EXPECT_EQ(config.maxbatchsize(), 5242880);
-// }
+ /*
+ ²âÊÔ£ºÅäÖÃºÏ·¨ĞÔĞ£Ñé£¬ÀÛ¼ÆµÄbatchsize´óĞ¡³¬¹ı5M
+ Ô¤ÆÚ½á¹û£ºÔòÊ¹ÓÃÄ¬ÈÏÖµtotalsizelnbytes=104857600
+ */
+ TEST(tencent_log_sdk_test, config_maxbatchsize_max)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     config.set_maxbatchsize(5242881);
+     auto client = std::make_shared<ProducerClient>(config);
+     EXPECT_EQ(config.maxbatchsize(), 5242880);
+ }
 
-// /*
-// æµ‹è¯•ï¼šé…ç½®åˆæ³•æ€§æ ¡éªŒï¼Œé€—ç•™æ—¶é—´å°äº100ms
-// é¢„æœŸç»“æœï¼šåˆ™ä½¿ç”¨é»˜è®¤å€¼lingerms=2000
-// */
-// TEST(tencent_log_sdk_test, config_lingerms)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid("");
-//     config.set_accesskeysecret("");
-//     config.set_lingerms(80);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     EXPECT_EQ(config.lingerms(), 2000);
-// }
+ /*
+ ²âÊÔ£ºÅäÖÃºÏ·¨ĞÔĞ£Ñé£¬¶ºÁôÊ±¼äĞ¡ÓÚ100ms
+ Ô¤ÆÚ½á¹û£ºÔòÊ¹ÓÃÄ¬ÈÏÖµlingerms=2000
+ */
+ TEST(tencent_log_sdk_test, config_lingerms)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     config.set_lingerms(80);
+     auto client = std::make_shared<ProducerClient>(config);
+     EXPECT_EQ(config.lingerms(), 2000);
+ }
 
-// /*
-// æµ‹è¯•ï¼šé…ç½®åˆæ³•æ€§æ ¡éªŒï¼Œé¦–æ¬¡é‡è¯•çš„é€€é¿æ—¶é—´å°äºç­‰äº0
-// é¢„æœŸç»“æœï¼šåˆ™ä½¿ç”¨é»˜è®¤å€¼baseretrybackoffms=100
-// */
-// TEST(tencent_log_sdk_test, config_baseretrybackoffms)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid("");
-//     config.set_accesskeysecret("");
-//     config.set_baseretrybackoffms(0);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     EXPECT_EQ(config.baseretrybackoffms(), 100);
-// }
+ /*
+ ²âÊÔ£ºÅäÖÃºÏ·¨ĞÔĞ£Ñé£¬Ê×´ÎÖØÊÔµÄÍË±ÜÊ±¼äĞ¡ÓÚµÈÓÚ0
+ Ô¤ÆÚ½á¹û£ºÔòÊ¹ÓÃÄ¬ÈÏÖµbaseretrybackoffms=100
+ */
+ TEST(tencent_log_sdk_test, config_baseretrybackoffms)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     config.set_baseretrybackoffms(0);
+     auto client = std::make_shared<ProducerClient>(config);
+     EXPECT_EQ(config.baseretrybackoffms(), 100);
+ }
 
-// /*
-// æµ‹è¯•ï¼šé…ç½®åˆæ³•æ€§æ ¡éªŒï¼Œé‡è¯•çš„æœ€å¤§é€€é¿æ—¶é—´å°äºç­‰äº0
-// é¢„æœŸç»“æœï¼šåˆ™ä½¿ç”¨é»˜è®¤å€¼maxretrybackoffms=50ms
-// */
-// TEST(tencent_log_sdk_test, config_maxretrybackoffms)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid("");
-//     config.set_accesskeysecret("");
-//     config.set_maxretrybackoffms(0);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     EXPECT_EQ(config.maxretrybackoffms(), 50000);
-// }
+ /*
+ ²âÊÔ£ºÅäÖÃºÏ·¨ĞÔĞ£Ñé£¬ÖØÊÔµÄ×î´óÍË±ÜÊ±¼äĞ¡ÓÚµÈÓÚ0
+ Ô¤ÆÚ½á¹û£ºÔòÊ¹ÓÃÄ¬ÈÏÖµmaxretrybackoffms=50ms
+ */
+ TEST(tencent_log_sdk_test, config_maxretrybackoffms)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     config.set_maxretrybackoffms(0);
+     auto client = std::make_shared<ProducerClient>(config);
+     EXPECT_EQ(config.maxretrybackoffms(), 50000);
+ }
 
-// /*
-// æµ‹è¯•ï¼šæœªè®¾ç½®çš„é…ç½®
-// é¢„æœŸç»“æœï¼šé‡‡ç”¨é»˜è®¤å€¼
-// */
-// TEST(tencent_log_sdk_test, config_default)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid("");
-//     config.set_accesskeysecret("");
-//     auto client = std::make_shared<ProducerClient>(config);
-//     EXPECT_EQ(config.totalsizelnbytes(), 104857600);
-//     EXPECT_EQ(config.maxsendworkercount(), 50);
-//     EXPECT_EQ(config.maxblocksec(), 60);
-//     EXPECT_EQ(config.maxbatchsize(), 5242880);
-//     EXPECT_EQ(config.lingerms(), 2000);
-//     EXPECT_EQ(config.retries(), 10);
-//     EXPECT_EQ(config.baseretrybackoffms(), 100);
-//     EXPECT_EQ(config.maxretrybackoffms(), 50000);
-//     EXPECT_EQ(config.compressflag(), 1);
-//     EXPECT_EQ(config.baseretrybackoffms(), 100);
-//     EXPECT_EQ(config.baseretrybackoffms(), 100);
-// }
+ /*
+ ²âÊÔ£ºÎ´ÉèÖÃµÄÅäÖÃ
+ Ô¤ÆÚ½á¹û£º²ÉÓÃÄ¬ÈÏÖµ
+ */
+ TEST(tencent_log_sdk_test, config_default)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     auto client = std::make_shared<ProducerClient>(config);
+     EXPECT_EQ(config.totalsizelnbytes(), 104857600);
+     EXPECT_EQ(config.maxsendworkercount(), 50);
+     EXPECT_EQ(config.maxblocksec(), 60);
+     EXPECT_EQ(config.maxbatchsize(), 5242880);
+     EXPECT_EQ(config.lingerms(), 2000);
+     EXPECT_EQ(config.retries(), 10);
+     EXPECT_EQ(config.baseretrybackoffms(), 100);
+     EXPECT_EQ(config.maxretrybackoffms(), 50000);
+     EXPECT_EQ(config.compressflag(), 1);
+     EXPECT_EQ(config.baseretrybackoffms(), 100);
+     EXPECT_EQ(config.baseretrybackoffms(), 100);
+ }
 
-// /*
-// æµ‹è¯•ï¼šTotalSizeLnByteså¤§å°ä½¿ç”¨é»˜è®¤å€¼100Mä¸Šçº¿ï¼Œä¸”ä½¿ç”¨é»˜è®¤å€¼
-// MaxBlockSec=0s.ç”¨æˆ·ä½¿ç”¨çš„
-// memtotalsize_å¤§äºTotalSizeLnBytes
-// é¢„æœŸï¼šè¿”å›é”™è¯¯ç ï¼Œå¹¶è¿”å›æ–‡æ¡ˆä¿¡æ¯TotalSizeLnBytes limit å†…å­˜å¤§å°é™åˆ¶
-// */
-// TEST(tencent_log_sdk_test, limit_totalsizelnbyte_0)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid("");
-//     config.set_accesskeysecret("");
-//     config.set_totalsizelnbytes(10); //è®¾ç½®å†…å­˜çš„å¤§å°hæ˜¯10K
-//     config.set_maxblocksec(0); //è¯¥å€¼è®¾ä¸º0ï¼Œå½“æ‰€éœ€ç©ºé—´æ— æ³•å¾—åˆ°æ»¡è¶³æ—¶ï¼Œç«‹å³è¿”å›
-//     auto client = std::make_shared<ProducerClient>(config);
-//     client->Start();
-//     cls::Log log;
-//     log.set_time(time(NULL));
-//     for (int i = 0; i < 10; ++i)
-//     {
-//         auto content = log.add_contents();
-//         content->set_key("content");
-//         content->set_value("this my test log");
-//     }
-//     std::string topic = "";
-//     auto callback = std::make_shared<UserResult>();
-//     client->PostLogStoreLogs(topic, log, callback);
-//     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-//     EXPECT_EQ(ret.statusCode, 2);
-//     EXPECT_STREQ(ret.content.c_str(), "TotalSizeLnBytes limit");
-//     sleep(3); //æ¨¡æ‹Ÿ3så¤„ç†ç½‘ç»œå»¶æ—¶çš„æƒ…å†µ
-//     client->LogProducerEnvDestroy();
-// }
+ /*
+ ²âÊÔ£ºTotalSizeLnBytes´óĞ¡Ê¹ÓÃÄ¬ÈÏÖµ100MÉÏÏß£¬ÇÒÊ¹ÓÃÄ¬ÈÏÖµ
+ MaxBlockSec=0s.ÓÃ»§Ê¹ÓÃµÄ
+ memtotalsize_´óÓÚTotalSizeLnBytes
+ Ô¤ÆÚ£º·µ»Ø´íÎóÂë£¬²¢·µ»ØÎÄ°¸ĞÅÏ¢TotalSizeLnBytes limit ÄÚ´æ´óĞ¡ÏŞÖÆ
+ */
+ TEST(tencent_log_sdk_test, limit_totalsizelnbyte_0)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     config.set_totalsizelnbytes(10); //ÉèÖÃÄÚ´æµÄ´óĞ¡hÊÇ10K
+     config.set_maxblocksec(0); //¸ÃÖµÉèÎª0£¬µ±ËùĞè¿Õ¼äÎŞ·¨µÃµ½Âú×ãÊ±£¬Á¢¼´·µ»Ø
+     auto client = std::make_shared<ProducerClient>(config);
+     client->Start();
+     cls::Log log;
+     log.set_time(time(NULL));
+     for (int i = 0; i < 10; ++i)
+     {
+         auto content = log.add_contents();
+         content->set_key("content");
+         content->set_value("this my test log");
+     }
+     std::string topic = "";
+     auto callback = std::make_shared<UserResult>();
+     client->PostLogStoreLogs(topic, log, callback);
+     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     EXPECT_EQ(ret.statusCode, 2);
+     EXPECT_STREQ(ret.content.c_str(), "TotalSizeLnBytes limit");
+     Sleep(3); //Ä£Äâ3s´¦ÀíÍøÂçÑÓÊ±µÄÇé¿ö
+     client->LogProducerEnvDestroy();
+ }
 
-// /*
-// æµ‹è¯•ï¼šTotalSizeLnByteså¤§å°ä½¿ç”¨é»˜è®¤å€¼100Mä¸Šçº¿ï¼Œä¸”ä½¿ç”¨é»˜è®¤å€¼
-// MaxBlockSec=60s.ç”¨æˆ·ä½¿ç”¨çš„
-// memtotalsize_å¤§äºTotalSizeLnBytes
-// é¢„æœŸï¼šç­‰å¾…60sä¹‹åè¿”å›é”™è¯¯ç ï¼Œå¹¶è¿”å›æ–‡æ¡ˆä¿¡æ¯TotalSizeLnBytes limit å†…å­˜å¤§å°é™åˆ¶
-// */
-// TEST(tencent_log_sdk_test, limit_totalsizelnbyte_default)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid("");
-//     config.set_accesskeysecret("");
-//     config.set_totalsizelnbytes(10); //è®¾ç½®å†…å­˜çš„å¤§å°hæ˜¯10K
-//     config.set_maxblocksec(3); //è¯¥å€¼è®¾ä¸º0ï¼Œå½“æ‰€éœ€ç©ºé—´æ— æ³•å¾—åˆ°æ»¡è¶³æ—¶ï¼Œç«‹å³è¿”å›
-//     auto client = std::make_shared<ProducerClient>(config);
-//     client->Start();
-//     cls::Log log;
-//     log.set_time(time(NULL));
-//     for (int i = 0; i < 10; ++i)
-//     {
-//         auto content = log.add_contents();
-//         content->set_key("content");
-//         content->set_value("this my test log");
-//     }
-//     std::string topic = "";
-//     auto callback = std::make_shared<UserResult>();
-//     client->PostLogStoreLogs(topic, log, callback);
-//     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-//     EXPECT_EQ(ret.statusCode, 2);
-//     EXPECT_STREQ(ret.content.c_str(), "TotalSizeLnBytes limit");
-//     sleep(5); //æ¨¡æ‹Ÿ10så¤„ç†ç½‘ç»œå»¶æ—¶çš„æƒ…å†µ
-//     client->LogProducerEnvDestroy();
-// }
+ /*
+ ²âÊÔ£ºTotalSizeLnBytes´óĞ¡Ê¹ÓÃÄ¬ÈÏÖµ100MÉÏÏß£¬ÇÒÊ¹ÓÃÄ¬ÈÏÖµ
+ MaxBlockSec=60s.ÓÃ»§Ê¹ÓÃµÄ
+ memtotalsize_´óÓÚTotalSizeLnBytes
+ Ô¤ÆÚ£ºµÈ´ı60sÖ®ºó·µ»Ø´íÎóÂë£¬²¢·µ»ØÎÄ°¸ĞÅÏ¢TotalSizeLnBytes limit ÄÚ´æ´óĞ¡ÏŞÖÆ
+ */
+ TEST(tencent_log_sdk_test, limit_totalsizelnbyte_default)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     config.set_totalsizelnbytes(10); //ÉèÖÃÄÚ´æµÄ´óĞ¡hÊÇ10K
+     config.set_maxblocksec(3); //¸ÃÖµÉèÎª0£¬µ±ËùĞè¿Õ¼äÎŞ·¨µÃµ½Âú×ãÊ±£¬Á¢¼´·µ»Ø
+     auto client = std::make_shared<ProducerClient>(config);
+     client->Start();
+     cls::Log log;
+     log.set_time(time(NULL));
+     for (int i = 0; i < 10; ++i)
+     {
+         auto content = log.add_contents();
+         content->set_key("content");
+         content->set_value("this my test log");
+     }
+     std::string topic = "";
+     auto callback = std::make_shared<UserResult>();
+     client->PostLogStoreLogs(topic, log, callback);
+     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     EXPECT_EQ(ret.statusCode, 2);
+     EXPECT_STREQ(ret.content.c_str(), "TotalSizeLnBytes limit");
+     Sleep(5); //Ä£Äâ10s´¦ÀíÍøÂçÑÓÊ±µÄÇé¿ö
+     client->LogProducerEnvDestroy();
+ }
 
-// /*
-// æµ‹è¯•ï¼šTotalSizeLnByteså¤§å°ä½¿ç”¨é»˜è®¤å€¼100Mä¸Šçº¿ï¼Œç”¨æˆ·è®¾ç½®çš„MaxBlockSec = -1
-// memtotalsize_å¤§äºTotalSizeLnBytes
-// é¢„æœŸï¼šä¸€ç›´ç­‰å¾…ï¼Œç›´åˆ°å†…å­˜é‡Šæ”¾ï¼ˆä¾èµ–é€—ç•™çš„æ—¶é—´ç‚¹,å½“å‰æ¨¡æ‹Ÿç­‰å¾…3sï¼Œç„¶åç»§ç»­å‘é€æ•°æ®ï¼‰
-// */
-// TEST(tencent_log_sdk_test, limit_totalsizelnbyte_block)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid("");
-//     config.set_accesskeysecret("");
-//     config.set_totalsizelnbytes(10); //è®¾ç½®å†…å­˜çš„å¤§å°hæ˜¯10K
-//     config.set_maxblocksec(-1); //è¯¥å€¼è®¾ä¸º0ï¼Œå½“æ‰€éœ€ç©ºé—´æ— æ³•å¾—åˆ°æ»¡è¶³æ—¶ï¼Œç«‹å³è¿”å›
-//     config.set_lingerms(3000);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     client->Start();
-//     cls::Log log;
-//     log.set_time(time(NULL));
-//     for (int i = 0; i < 10; ++i)
-//     {
-//         auto content = log.add_contents();
-//         content->set_key("content");
-//         content->set_value("this my test log");
-//     }
-//     std::string topic = "";
-//     auto callback = std::make_shared<UserResult>();
-//     client->PostLogStoreLogs(topic, log, callback);
-//     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-//     EXPECT_EQ(ret.statusCode, 0);
-//     sleep(8); //æ¨¡æ‹Ÿ10så¤„ç†ç½‘ç»œå»¶æ—¶çš„æƒ…å†µ
-//     client->LogProducerEnvDestroy();
-// }
+ /*
+ ²âÊÔ£ºTotalSizeLnBytes´óĞ¡Ê¹ÓÃÄ¬ÈÏÖµ100MÉÏÏß£¬ÓÃ»§ÉèÖÃµÄMaxBlockSec = -1
+ memtotalsize_´óÓÚTotalSizeLnBytes
+ Ô¤ÆÚ£ºÒ»Ö±µÈ´ı£¬Ö±µ½ÄÚ´æÊÍ·Å£¨ÒÀÀµ¶ºÁôµÄÊ±¼äµã,µ±Ç°Ä£ÄâµÈ´ı3s£¬È»ºó¼ÌĞø·¢ËÍÊı¾İ£©
+ */
+ TEST(tencent_log_sdk_test, limit_totalsizelnbyte_block)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     config.set_totalsizelnbytes(10); //ÉèÖÃÄÚ´æµÄ´óĞ¡hÊÇ10K
+     config.set_maxblocksec(-1); //¸ÃÖµÉèÎª0£¬µ±ËùĞè¿Õ¼äÎŞ·¨µÃµ½Âú×ãÊ±£¬Á¢¼´·µ»Ø
+     config.set_lingerms(3000);
+     auto client = std::make_shared<ProducerClient>(config);
+     client->Start();
+     cls::Log log;
+     log.set_time(time(NULL));
+     for (int i = 0; i < 10; ++i)
+     {
+         auto content = log.add_contents();
+         content->set_key("content");
+         content->set_value("this my test log");
+     }
+     std::string topic = "";
+     auto callback = std::make_shared<UserResult>();
+     client->PostLogStoreLogs(topic, log, callback);
+     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     EXPECT_EQ(ret.statusCode, 0);
+     Sleep(8); //Ä£Äâ10s´¦ÀíÍøÂçÑÓÊ±µÄÇé¿ö
+     client->LogProducerEnvDestroy();
+ }
 
 
 /*
-æµ‹è¯•ï¼šç¨‹åºshutdown
-é¢„æœŸï¼šæ— æ³•æ·»åŠ æ•°æ®,è¿”å›é”™è¯¯ç ERR_CLS_SDK_TASK_SHUTDOWN
+²âÊÔ£º³ÌĞòshutdown
+Ô¤ÆÚ£ºÎŞ·¨Ìí¼ÓÊı¾İ,·µ»Ø´íÎóÂëERR_CLS_SDK_TASK_SHUTDOWN
 */
-// TEST(tencent_log_sdk_test, shutdown)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid(â€œâ€);
-//     config.set_accesskeysecret("");
-//     config.set_maxbatchsize(300);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     client->Start();
-//     cls::Log log;
-//     log.set_time(time(NULL));
-//     for (int i = 0; i < 10; ++i)
-//     {
-//         auto content = log.add_contents();
-//         content->set_key("content");
-//         content->set_value("this my test log");
-//     }
-//     std::string topic = "";
-//     auto callback = std::make_shared<UserResult>();
-//     client->PostLogStoreLogs(topic, log, callback);
-//     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-
-//     client->LogProducerEnvDestroy();
-//     EXPECT_EQ(ret.statusCode, 3);
-// }
+ TEST(tencent_log_sdk_test, shutdown)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     config.set_maxbatchsize(300);
+     auto client = std::make_shared<ProducerClient>(config);
+     client->Start();
+     cls::Log log;
+     log.set_time(time(NULL));
+     for (int i = 0; i < 10; ++i)
+     {
+         auto content = log.add_contents();
+         content->set_key("content");
+         content->set_value("this my test log");
+     }
+     std::string topic = "";
+     auto callback = std::make_shared<UserResult>();
+     client->PostLogStoreLogs(topic, log, callback);
+     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     client->LogProducerEnvDestroy();
+     EXPECT_EQ(ret.statusCode, 3);
+ }
 
 /*
-æµ‹è¯•åœºæ™¯ï¼šAddLogToProducerBatchå‡½æ•°å¦‚æœtopicå¯ä»¥æ‰¾åˆ°ï¼Œå¦‚æœè¶…è¿‡äº†maxbatchsizeä½†æ˜¯å°äº5M
-é¢„æœŸç»“æœï¼šå¯æ­£å¸¸å‘é€æ•°æ®ã€‚å¹¶ä¸”æ”¯æŒèšåˆ
+²âÊÔ³¡¾°£ºAddLogToProducerBatchº¯ÊıÈç¹ûtopic¿ÉÒÔÕÒµ½£¬Èç¹û³¬¹ıÁËmaxbatchsizeµ«ÊÇĞ¡ÓÚ5M
+Ô¤ÆÚ½á¹û£º¿ÉÕı³£·¢ËÍÊı¾İ¡£²¢ÇÒÖ§³Ö¾ÛºÏ
 */
 
-// TEST(tencent_log_sdk_test, maxbatchsize_0)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid(â€œâ€);
-//     config.set_accesskeysecret("");
-//     config.set_maxbatchsize(300);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     client->Start();
-//     cls::Log log;
-//     log.set_time(time(NULL));
-//     for (int i = 0; i < 10; ++i)
-//     {
-//         auto content = log.add_contents();
-//         content->set_key("content");
-//         content->set_value("this my test log");
-//     }
-//     std::string topic = "";
-//     auto callback = std::make_shared<UserResult>();
-//     client->PostLogStoreLogs(topic, log, callback);
-//     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-
-//     client->LogProducerEnvDestroy();
-//     EXPECT_EQ(ret.statusCode, 0);
-// }
+ TEST(tencent_log_sdk_test, maxbatchsize_0)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     config.set_maxbatchsize(300);
+     auto client = std::make_shared<ProducerClient>(config);
+     client->Start();
+     cls::Log log;
+     log.set_time(time(NULL));
+     for (int i = 0; i < 10; ++i)
+     {
+         auto content = log.add_contents();
+         content->set_key("content");
+         content->set_value("this my test log");
+     }
+     std::string topic = "";
+     auto callback = std::make_shared<UserResult>();
+     client->PostLogStoreLogs(topic, log, callback);
+     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     client->LogProducerEnvDestroy();
+     EXPECT_EQ(ret.statusCode, 0);
+ }
 
 /*
-æµ‹è¯•åœºæ™¯ï¼šAddLogToProducerBatchå‡½æ•°å¦‚æœtopicå¯ä»¥æ‰¾åˆ°ï¼Œå¦‚æœæœªè¶…è¿‡maxbatchsize
-é¢„æœŸï¼šåªéœ€æ·»åŠ æ•°æ®åˆ°maä¸­ï¼Œç­‰å¾…æ•°æ®è¶…è¿‡maxbatchsizeåˆ™å‘é€æ•°æ®ï¼Œæˆ–è€…è¾¾åˆ°é€—ç•™æ—¶é—´åˆ™å‘é€æ•°æ®
+²âÊÔ³¡¾°£ºAddLogToProducerBatchº¯ÊıÈç¹ûtopic¿ÉÒÔÕÒµ½£¬Èç¹ûÎ´³¬¹ımaxbatchsize
+Ô¤ÆÚ£ºÖ»ĞèÌí¼ÓÊı¾İµ½maÖĞ£¬µÈ´ıÊı¾İ³¬¹ımaxbatchsizeÔò·¢ËÍÊı¾İ£¬»òÕß´ïµ½¶ºÁôÊ±¼äÔò·¢ËÍÊı¾İ
 */
-// TEST(tencent_log_sdk_test, maxbatchsize_1)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid(â€œâ€);
-//     config.set_accesskeysecret("");
-//     config.set_maxbatchsize(1024 * 1024); //è¿™é‡Œè®¾ç½®æˆ1M
-//     auto client = std::make_shared<ProducerClient>(config);
-//     client->Start();
-//     cls::Log log;
-//     log.set_time(time(NULL));
-//     for (int i = 0; i < 10; ++i)
-//     {
-//         auto content = log.add_contents();
-//         content->set_key("content");
-//         content->set_value("this my test log");
-//     }
-//     std::string topic = "";
-//     auto callback = std::make_shared<UserResult>();
-//     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-//     sleep(3);
-//     client->LogProducerEnvDestroy();
-//     EXPECT_EQ(ret.statusCode, 0);
-// }
+ TEST(tencent_log_sdk_test, maxbatchsize_1)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     config.set_maxbatchsize(1024 * 1024); //ÕâÀïÉèÖÃ³É1M
+     auto client = std::make_shared<ProducerClient>(config);
+     client->Start();
+     cls::Log log;
+     log.set_time(time(NULL));
+     for (int i = 0; i < 10; ++i)
+     {
+         auto content = log.add_contents();
+         content->set_key("content");
+         content->set_value("this my test log");
+     }
+     std::string topic = "";
+     auto callback = std::make_shared<UserResult>();
+     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     Sleep(3);
+     client->LogProducerEnvDestroy();
+     EXPECT_EQ(ret.statusCode, 0);
+ }
 
 /*
-æµ‹è¯•åœºæ™¯ï¼šAddLogToProducerBatchå‡½æ•°å¦‚æœtopicå¯ä»¥æ‰¾åˆ°ï¼Œå¦‚æœè¶…è¿‡5M(å»¶é•¿é€—ç•™çš„æ—¶é—´ï¼Œä¸å½±å“å½“å‰ç­–ç•¥)
-é¢„æœŸï¼šå…ˆæŠŠä¹‹å‰çš„æ•°æ®å‘é€å®Œæˆï¼Œå†é‡æ–°åˆ›å»ºæ–°çš„batchloggroup
+²âÊÔ³¡¾°£ºAddLogToProducerBatchº¯ÊıÈç¹ûtopic¿ÉÒÔÕÒµ½£¬Èç¹û³¬¹ı5M(ÑÓ³¤¶ºÁôµÄÊ±¼ä£¬²»Ó°Ïìµ±Ç°²ßÂÔ)
+Ô¤ÆÚ£ºÏÈ°ÑÖ®Ç°µÄÊı¾İ·¢ËÍÍê³É£¬ÔÙÖØĞÂ´´½¨ĞÂµÄbatchloggroup
 */
-// TEST(tencent_log_sdk_test, maxbatchsize_2)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid(â€œâ€);
-//     config.set_accesskeysecret("");
-//     // config.set_maxbatchsize(1024 * 1024); //è¿™é‡Œè®¾ç½®æˆ1M
-//     config.set_lingerms(10000);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     client->Start();
-//     cls::Log log;
-//     log.set_time(time(NULL));
-//     // for (int i = 0; i < 10; ++i)
-//     // {
-//     //     auto content = log.add_contents();
-//     //     content->set_key("content");
-//     //     content->set_value("this my test log");
-//     // }
-//     std::string topic = "";
-//     auto callback = std::make_shared<UserResult>();
-//     // PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-//     auto content = log.add_contents();
-//     content->set_key("content");
-//     std::string tmp = "this my test log";
-//     for (int i = 0; i < 130000; ++i)
-//     {
-//         tmp += "add data";
-//     }
-//     content->set_value(tmp);
-//     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-//     ret = client->PostLogStoreLogs(topic, log, callback);
-//     ret = client->PostLogStoreLogs(topic, log, callback);
-//     ret = client->PostLogStoreLogs(topic, log, callback);
-//     ret = client->PostLogStoreLogs(topic, log, callback);
-//     ret = client->PostLogStoreLogs(topic, log, callback);
-//     ret = client->PostLogStoreLogs(topic, log, callback);
-//     sleep(5);
-//     client->LogProducerEnvDestroy();
-//     // EXPECT_EQ(ret.statusCode, 0);
-// }
+ TEST(tencent_log_sdk_test, maxbatchsize_2)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     // config.set_maxbatchsize(1024 * 1024); //ÕâÀïÉèÖÃ³É1M
+     config.set_lingerms(10000);
+     auto client = std::make_shared<ProducerClient>(config);
+     client->Start();
+     cls::Log log;
+     log.set_time(time(NULL));
+     // for (int i = 0; i < 10; ++i)
+     // {
+     //     auto content = log.add_contents();
+     //     content->set_key("content");
+     //     content->set_value("this my test log");
+     // }
+     std::string topic = "";
+     auto callback = std::make_shared<UserResult>();
+     // PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     auto content = log.add_contents();
+     content->set_key("content");
+     std::string tmp = "this my test log";
+     for (int i = 0; i < 130000; ++i)
+     {
+         tmp += "add data";
+     }
+     content->set_value(tmp);
+     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     ret = client->PostLogStoreLogs(topic, log, callback);
+     ret = client->PostLogStoreLogs(topic, log, callback);
+     ret = client->PostLogStoreLogs(topic, log, callback);
+     ret = client->PostLogStoreLogs(topic, log, callback);
+     ret = client->PostLogStoreLogs(topic, log, callback);
+     ret = client->PostLogStoreLogs(topic, log, callback);
+     Sleep(5);
+     client->LogProducerEnvDestroy();
+     // EXPECT_EQ(ret.statusCode, 0);
+ }
 
 
 /*
-æµ‹è¯•åœºæ™¯ï¼šAddLogToProducerBatchä¸ºè¶…è¿‡maxbatchsize,ä½†æ˜¯é€—ç•™æ—¶é—´è§¦è¾¾
-é¢„æœŸï¼šæŠŠæ•°æ®æ·»åŠ åˆ°çº¿ç¨‹æ± ä¸­
+²âÊÔ³¡¾°£ºAddLogToProducerBatchÎª³¬¹ımaxbatchsize,µ«ÊÇ¶ºÁôÊ±¼ä´¥´ï
+Ô¤ÆÚ£º°ÑÊı¾İÌí¼Óµ½Ïß³Ì³ØÖĞ
 */
-// TEST(tencent_log_sdk_test, linems_1)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid(â€œâ€);
-//     config.set_accesskeysecret("");
-//     // config.set_maxbatchsize(1024 * 1024); //è¿™é‡Œè®¾ç½®æˆ1M
-//     config.set_lingerms(500);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     client->Start();
-//     cls::Log log;
-//     log.set_time(time(NULL));
-//     std::string topic = "";
-//     auto callback = std::make_shared<UserResult>();
-//     // PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-//     auto content = log.add_contents();
-//     content->set_key("content");
-//     std::string tmp = "this my test log";
-//     for (int i = 0; i < 130000; ++i)
-//     {
-//         tmp += "add data";
-//     }
-//     content->set_value(tmp);
-//     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-//     ret = client->PostLogStoreLogs(topic, log, callback);
-//     ret = client->PostLogStoreLogs(topic, log, callback);
-//     sleep(5);
-//     client->LogProducerEnvDestroy();
-//     EXPECT_EQ(ret.statusCode, 0);
-// }
+ TEST(tencent_log_sdk_test, linems_1)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     // config.set_maxbatchsize(1024 * 1024); //ÕâÀïÉèÖÃ³É1M
+     config.set_lingerms(500);
+     auto client = std::make_shared<ProducerClient>(config);
+     client->Start();
+     cls::Log log;
+     log.set_time(time(NULL));
+     std::string topic = "";
+     auto callback = std::make_shared<UserResult>();
+     // PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     auto content = log.add_contents();
+     content->set_key("content");
+     std::string tmp = "this my test log";
+     for (int i = 0; i < 130000; ++i)
+     {
+         tmp += "add data";
+     }
+     content->set_value(tmp);
+     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     ret = client->PostLogStoreLogs(topic, log, callback);
+     ret = client->PostLogStoreLogs(topic, log, callback);
+     Sleep(5);
+     client->LogProducerEnvDestroy();
+     EXPECT_EQ(ret.statusCode, 0);
+ }
 
 /*
-æµ‹è¯•åœºæ™¯ï¼šAddLogToProducerBatchä¸ºè¶…è¿‡maxbatchsizeï¼Œå¹¶ä¸”é€—ç•™æ—¶é—´è§¦è¾¾
-é¢„æœŸï¼šæŠŠæ•°æ®æ·»åŠ åˆ°çº¿ç¨‹æ± ä¸­ä¸”æ•°æ®ä¸é”™ä¹±
+²âÊÔ³¡¾°£ºAddLogToProducerBatchÎª³¬¹ımaxbatchsize£¬²¢ÇÒ¶ºÁôÊ±¼ä´¥´ï
+Ô¤ÆÚ£º°ÑÊı¾İÌí¼Óµ½Ïß³Ì³ØÖĞÇÒÊı¾İ²»´íÂÒ
 */
-// TEST(tencent_log_sdk_test, linems_2)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid(â€œâ€);
-//     config.set_accesskeysecret("");
-//     // config.set_maxbatchsize(1024 * 1024); //è¿™é‡Œè®¾ç½®æˆ1M
-//     config.set_lingerms(1);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     client->Start();
-//     cls::Log log;
-//     log.set_time(time(NULL));
-//     std::string topic = "";
-//     auto callback = std::make_shared<UserResult>();
-//     // PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-//     auto content = log.add_contents();
-//     content->set_key("content");
-//     std::string tmp = "this my test log";
-//     for (int i = 0; i < 130000; ++i)
-//     {
-//         tmp += "add data";
-//     }
-//     content->set_value(tmp);
-//     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-//     for (int i = 0; i < 10; ++i)
-//     {
-//         sleep(1);
-//         ret = client->PostLogStoreLogs(topic, log, callback);
-//     }
-//     sleep(5);
-//     client->LogProducerEnvDestroy();
-//     EXPECT_EQ(ret.statusCode, 0);
-// }
+ TEST(tencent_log_sdk_test, linems_2)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     // config.set_maxbatchsize(1024 * 1024); //ÕâÀïÉèÖÃ³É1M
+     config.set_lingerms(1);
+     auto client = std::make_shared<ProducerClient>(config);
+     client->Start();
+     cls::Log log;
+     log.set_time(time(NULL));
+     std::string topic = "";
+     auto callback = std::make_shared<UserResult>();
+     // PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     auto content = log.add_contents();
+     content->set_key("content");
+     std::string tmp = "this my test log";
+     for (int i = 0; i < 130000; ++i)
+     {
+         tmp += "add data";
+     }
+     content->set_value(tmp);
+     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     for (int i = 0; i < 10; ++i)
+     {
+         Sleep(1);
+         ret = client->PostLogStoreLogs(topic, log, callback);
+     }
+     Sleep(5);
+     client->LogProducerEnvDestroy();
+     EXPECT_EQ(ret.statusCode, 0);
+ }
 
 /*
-æµ‹è¯•åœºæ™¯ï¼šæ•°æ®å‘é€å¤±è´¥ï¼ŒåŠ å…¥åˆ°é‡è¯•é˜Ÿåˆ—ä¸­
-é¢„æœŸï¼šæ•°æ®æŒ‰ç…§ä»å°åˆ°å¤§æ’åˆ—ç»„åˆ
+²âÊÔ³¡¾°£ºÊı¾İ·¢ËÍÊ§°Ü£¬¼ÓÈëµ½ÖØÊÔ¶ÓÁĞÖĞ
+Ô¤ÆÚ£ºÊı¾İ°´ÕÕ´ÓĞ¡µ½´óÅÅÁĞ×éºÏ
 */
-// TEST(tencent_log_sdk_test, retry_1)
-// {
-//     cls_config::LogProducerConfig config;
-//     config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-//     config.set_acceskeyid(â€œâ€);
-//     config.set_accesskeysecret("");
-//     // config.set_maxbatchsize(1024 * 1024); //è¿™é‡Œè®¾ç½®æˆ1M
-//     config.set_lingerms(1);
-//     auto client = std::make_shared<ProducerClient>(config);
-//     client->Start();
-//     cls::Log log;
-//     log.set_time(time(NULL));
-//     std::string topic = "0b31137-c547-4676-a19e-eaf1e5888921";
-//     auto callback = std::make_shared<UserResult>();
-//     // PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-//     auto content = log.add_contents();
-//     content->set_key("content");
-//     std::string tmp = "this my test log";
-//     for (int i = 0; i < 130000; ++i)
-//     {
-//         tmp += "add data";
-//     }
-//     content->set_value(tmp);
-//     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-//     for (int i = 0; i < 10; ++i)
-//     {
-//         ret = client->PostLogStoreLogs(topic, log, callback);
-//         sleep(2);
-//     }
-//     sleep(20);
-//     client->LogProducerEnvDestroy();
-//     EXPECT_EQ(ret.statusCode, 0);
-// }
+ TEST(tencent_log_sdk_test, retry_1)
+ {
+     cls_config::LogProducerConfig config;
+     config.set_endpoint("");
+     config.set_acceskeyid("");
+     config.set_accesskeysecret("");
+     // config.set_maxbatchsize(1024 * 1024); //ÕâÀïÉèÖÃ³É1M
+     config.set_lingerms(1);
+     auto client = std::make_shared<ProducerClient>(config);
+     client->Start();
+     cls::Log log;
+     log.set_time(time(NULL));
+     std::string topic = "0b31137-c547-4676-a19e-eaf1e5888921";
+     auto callback = std::make_shared<UserResult>();
+     // PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     auto content = log.add_contents();
+     content->set_key("content");
+     std::string tmp = "this my test log";
+     for (int i = 0; i < 130000; ++i)
+     {
+         tmp += "add data";
+     }
+     content->set_value(tmp);
+     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
+     for (int i = 0; i < 10; ++i)
+     {
+         ret = client->PostLogStoreLogs(topic, log, callback);
+         Sleep(2);
+     }
+     Sleep(20);
+     client->LogProducerEnvDestroy();
+     EXPECT_EQ(ret.statusCode, 0);
+ }
 
 
 /*
-æµ‹è¯•åœºæ™¯ï¼šæ•°æ®å‘é€å¤±è´¥ï¼ŒåŠ å…¥åˆ°é‡è¯•é˜Ÿåˆ—ä¸­,é‡è¯•retryesåä¾æ—§å¤±è´¥
-é¢„æœŸï¼šå›è°ƒç”¨æˆ·å¤±è´¥
+²âÊÔ³¡¾°£ºÊı¾İ·¢ËÍÊ§°Ü£¬¼ÓÈëµ½ÖØÊÔ¶ÓÁĞÖĞ,ÖØÊÔretryesºóÒÀ¾ÉÊ§°Ü
+Ô¤ÆÚ£º»Øµ÷ÓÃ»§Ê§°Ü
 */
 TEST(tencent_log_sdk_test, retry_2)
 {
     cls_config::LogProducerConfig config;
-    config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
-    config.set_acceskeyid(â€œâ€);
+    config.set_endpoint("");
+    config.set_acceskeyid("");
     config.set_accesskeysecret("");
-    // config.set_maxbatchsize(1024 * 1024); //è¿™é‡Œè®¾ç½®æˆ1M
+    // config.set_maxbatchsize(1024 * 1024); //ÕâÀïÉèÖÃ³É1M
     config.set_lingerms(1);
     config.set_retries(5);
     auto client = std::make_shared<ProducerClient>(config);
@@ -564,7 +559,16 @@ TEST(tencent_log_sdk_test, retry_2)
     }
     content->set_value(tmp);
     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-    sleep(20);
+    Sleep(20);
     client->LogProducerEnvDestroy();
     EXPECT_EQ(ret.statusCode, 0);
+}
+
+
+int main(int argc, char** argv) {
+
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+
+    return 0;
 }

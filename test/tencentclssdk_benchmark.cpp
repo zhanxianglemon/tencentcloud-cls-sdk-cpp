@@ -1,18 +1,19 @@
 #include <string>
 #include <iostream>
-#include <unistd.h>
 
-#include "producerclient.h"
-#include "common.h"
+#include "cls/producerclient.h"
+#include "cls/common.h"
 #include "cls_logs.pb.h"
 #include "logproducerconfig.pb.h"
 #include <string>
 #include <iostream>
-#include <unistd.h>
-#include "result.h"
-#include "error.h"
+#include "cls/result.h"
+#include "cls/error.h"
 #include <array>
 #include <chrono>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
 // using namespace chrono;
 using namespace std::chrono;
 using namespace tencent_log_sdk_cpp_v2;
@@ -20,10 +21,11 @@ using namespace std;
 
 
 /*
-ç¼“å­˜ï¼š100MB
-èšåˆæ—¶é—´ï¼š2ç§’ 
-èšåˆæ•°æ®åŒ…å¤§å°ï¼š5MB
-å‘é€çº¿ç¨‹ï¼š50
+»º´æ£º100MB
+¾ÛºÏÊ±¼ä£º2Ãë
+¾ÛºÏÊı¾İ°ü´óĞ¡£º5MB
+Éú²úÏß³Ì£º1
+·¢ËÍÏß³Ì£º50
 */
 
 class UserResult : public CallBack
@@ -31,60 +33,102 @@ class UserResult : public CallBack
 public:
     UserResult() = default;
     ~UserResult() = default;
-    void Success(PostLogStoreLogsResponse result) override { std::cout << result.Printf() << std::endl; }
-    void Fail(PostLogStoreLogsResponse result) override { std::cout << result.Printf() << std::endl; }
+    void Success(PostLogStoreLogsResponse result) override { 
+        //std::cout << result.Printf() << std::endl; 
+    }
+    void Fail(PostLogStoreLogsResponse result) override { 
+        //std::cout << result.Printf() << std::endl; 
+    }
 };
+
 double total;
-void thread_task(int send_count,std::shared_ptr<ProducerClient> client)
-{
-    cls::Log log;
-    for(int i = 0; i < send_count; ++i){
-        auto start = system_clock::now();
+
+// ÈÕÖ¾¶ÓÁĞ¼°Í¬²½Ô­Óï
+std::queue<cls::Log> log_queue;
+std::mutex queue_mutex;
+std::condition_variable queue_cv;
+bool finished = false;
+
+// Éú²úÕßÏß³Ì£ºÖ»¸ºÔğĞ´ÈëÈÕÖ¾µ½¶ÓÁĞ
+void producer_thread(int send_count) {
+    for (int i = 0; i < send_count; ++i) {
+        cls::Log log;
         log.set_time(time(NULL));
         auto content = log.add_contents();
         content->set_key("content");
-        content->set_value("this my test log");
+        content->set_value("this my end log");
+        {
+            std::lock_guard<std::mutex> lock(queue_mutex);
+            log_queue.push(log);
+        }
+        queue_cv.notify_one();
+    }
+}
+
+// Ïû·ÑÕßÏß³Ì£ºÖ»¸ºÔğ´Ó¶ÓÁĞÈ¡ÈÕÖ¾²¢·¢ËÍ
+void consumer_thread(std::shared_ptr<ProducerClient> client) {
+    while (true) {
+        cls::Log log;
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            queue_cv.wait(lock, [] { return !log_queue.empty() || finished; });
+            if (log_queue.empty() && finished) {
+                break;
+            }
+            if (!log_queue.empty()) {
+                log = log_queue.front();
+                log_queue.pop();
+            } else {
+                continue;
+            }
+        }
         std::string topic = "";
         auto callback = std::make_shared<UserResult>();
-        //æˆåŠŸè¿”å›0ï¼Œä»£è¡¨æ•°æ®å…¥é˜ŸæˆåŠŸï¼Œæœ€ç»ˆæ˜¯å¦å‘é€
         PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
-        if (ret.statusCode != 0)
-        {
+        if (ret.statusCode != 0) {
             std::cout << ret.content << std::endl;
         }
-        auto end = system_clock::now();
-        auto duration = duration_cast<microseconds>(end - start);
-        total += double(duration.count()) * microseconds::period::num / microseconds::period::den;
-        cout << "è€—æ—¶ç»Ÿè®¡:"<< double(duration.count()) * microseconds::period::num / microseconds::period::den << "ç§’"
-                << endl;
-    }
 
+
+
+    }
 }
-int main(int argc,char **argv)
-{
-    cout << "å¼€å§‹æ‰§è¡Œæ€§èƒ½æµ‹è¯•" << endl;
+
+int main(int argc, char** argv)
+{ 
     cls_config::LogProducerConfig config;
-    config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
+    config.set_endpoint("ap-guangzhou.cls.tencentyun.com");
     config.set_acceskeyid("");
     config.set_accesskeysecret("");
+    
+    config.set_maxsendworkercount(50);
+
     auto client = std::make_shared<ProducerClient>(config);
     client->Start();
     int send_count = 20000;
-    int thread_count = 50;
-    if(argc == 3){
-        thread_count = atoi(argv[1]);
-        send_count = atoi(argv[2]);
+    int producer_count = 1;
+    int consumer_count = 50;
+    if (argc == 4) {
+        producer_count = atoi(argv[1]);
+        consumer_count = atoi(argv[2]);
+        send_count = atoi(argv[3]);
     }
-    std::thread threads[thread_count];
-    for(int i = 0; i < thread_count; ++i){
-        threads[i] = std::thread(thread_task,send_count,client);
+    std::vector<std::thread> consumers;
+    std::thread producer;
+    producer = std::thread(producer_thread, send_count*100);
+    for (int i = 0; i < consumer_count; ++i) {
+        consumers.emplace_back(consumer_thread, client);
     }
-    for(auto& t : threads){
+    producer.join();
+    // Í¨ÖªÏû·ÑÕßËùÓĞÈÕÖ¾ÒÑĞ´Èë
+    {
+        std::lock_guard<std::mutex> lock(queue_mutex);
+        finished = true;
+    }
+    queue_cv.notify_all();
+    for (auto& t : consumers) {
         t.join();
-    }
-    cout<<"å¹³å‡è€—æ—¶ç»Ÿè®¡ï¼š"<<total/send_count<<endl;
+    } 
     client->LogProducerEnvDestroy();
     return 0;
 }
-
-        

@@ -3,15 +3,20 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <netdb.h>
-#include <arpa/inet.h> // inet_addr
-#include <sys/ioctl.h>
+//#include <netinet/in.h>
+//#include <netinet/tcp.h>
+//#include <netdb.h>
+//#include <arpa/inet.h> // inet_addr
+//#include <sys/ioctl.h>
+#include <WinSock2.h>
+#include <WS2tcpip.h>  
+
 #include "common.h"
 #include "client.h"
 #include "RestfulApiCommon.h"
 #include <curl/curl.h>
+
+
 namespace tencent_log_sdk_cpp_v2
 {
 typedef enum

@@ -1,64 +1,57 @@
-cmake_minimum_required(VERSION 2.6)
-project(tencent-log-sdk-cpp)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+cmake_minimum_required(VERSION 3.15)
+set(VCPKG_TARGET_TRIPLET "x64-windows")
+set(CMAKE_TOOL_CHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+project(tencent-log-sdk-cpp-windows)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-Wno-template-body)
+endif()
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(Protobuf REQUIRED)
+find_package(CURL REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(OpenSSL REQUIRED)
+find_package(GTest REQUIRED)
+find_package(benchmark REQUIRED)
 
 
-#添加头文件的依赖路径
 include_directories(../)
+include_directories(../x64-windows/include)
 
-#开启测试
-enable_testing()
-
-##benchmark测试
-#find_package(benchmark REQUIRED)
-
-find_package(Threads REQUIRED)
-#find_package(Protobuf REQUIRED)
-
-#boost头文件查找路径
-INCLUDE_DIRECTORIES(/usr/local/Cellar/boost/1.78.0_1/include)
-INCLUDE_DIRECTORIES(/Users/herrylv/Desktop/cls_team/tencentcloud-cls-sdk-cpp/)
-#添加库查找路径
-link_directories(
-    "../../tencentcloud-cls-sdk-cpp/"
-    "/usr/local/lib"
-    "/usr/local/Cellar/openssl@3/3.0.2/lib"
-    "/usr/local/Cellar/boost/1.78.0_1/lib")
-
-# GTest 的头文件
-#find_package(GTest REQUIRED)
-#include_directories(${GTEST_INCLUDE_DIRS})
-#add_executable(tencentclssdk_test tencentclssdk_test.cpp)
-add_executable(tencentclssdk_benchmark tencentclssdk_benchmark.cpp)
-# 链接测试库
-#target_link_libraries( tencentclssdk_test
-#        ${GTEST_BOTH_LIBRARIES}
-#        pthread
-#        clssdk
-#        curl
-#        protobuf 
-#        ssl
-#        crypto
-#        boost_chrono
-#        boost_date_time
-#        boost_thread-mt
-#        boost_system
-#        benchmark)
-
-# 链接测试库
-target_link_libraries( tencentclssdk_benchmark
-        ${GTEST_BOTH_LIBRARIES}
-        pthread
-        clssdk
-        curl
-        protobuf 
-        ssl
-        crypto
-        boost_chrono
-        boost_date_time
-        boost_thread
-        boost_system)
+#set(PROTO_FILE
+#        "${CMAKE_SOURCE_DIR}/cls_logs.proto"
+#        "${CMAKE_SOURCE_DIR}/logproducerconfig.proto")
+#protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS
+#    ${PROTO_FILE})
 
 
+aux_source_directory(cls src)
+aux_source_directory(lz4 src)
+aux_source_directory(rapidjson src)
+
+add_executable(tencent-log-sdk-cpp-windows ${src} cls_logs.pb.cc logproducerconfig.pb.cc "test/tencentclssdk_test.cpp" "test/tencentclssdk_benchmark.cpp")
+
+target_link_libraries(tencent-log-sdk-cpp-windows PRIVATE protobuf::libprotobuf)
+target_link_libraries(tencent-log-sdk-cpp-windows PRIVATE CURL::libcurl)
+target_link_libraries(tencent-log-sdk-cpp-windows PRIVATE Boost::boost)
+target_link_libraries(tencent-log-sdk-cpp-windows PRIVATE Boost::system)
+target_link_libraries(tencent-log-sdk-cpp-windows PRIVATE Boost::thread)
+target_link_libraries(tencent-log-sdk-cpp-windows PRIVATE OpenSSL::SSL)
+target_link_libraries(tencent-log-sdk-cpp-windows PRIVATE OpenSSL::Crypto)
+target_link_libraries(tencent-log-sdk-cpp-windows PRIVATE GTest::gtest )
+target_link_libraries(tencent-log-sdk-cpp-windows PRIVATE benchmark::benchmark )
 
 
+if(MSVC)
+    set_target_properties(tencent-log-sdk-cpp-windows PROPERTIES COMPILE_FLAGS "/EHsc")  
+else()
+    set_target_properties(tencent-log-sdk-cpp-windows PROPERTIES COMPILE_FLAGS "-fexceptions") 
+endif()
+
+target_compile_definitions(tencent-log-sdk-cpp-windows PRIVATE
+        BOOST_THROW_EXCEPTION
+        BOOST_SYSTEM_NO_DEPRECATED
+)

@@ -1,4 +1,5 @@
 #include "producerclient.h"
+#define DEBUG
 
 namespace tencent_log_sdk_cpp_v2
 {
