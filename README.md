@@ -201,9 +201,7 @@ cd vcpkg
 .\vcpkg integrate install
 #如果没有进行集成，可以在vs中是手动配置参考http://www.cppcns.com/ruanjian/c/712786.html
 ```
-
 - protobuf验证：
-	- contacts.proto 文件
 
 ```c++
 // 首行：语法指定行（proto2）
@@ -216,8 +214,6 @@ message PeopleInfo {
   optional int32 age = 2;    // 年龄（proto2 必须声明 required/optional/repeated）
 }
 ```
--
-	- test.cc 文件
 
 ```c++
 #include <iostream> 
