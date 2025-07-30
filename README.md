@@ -171,13 +171,15 @@ int main(int argc,char ** argv)
 
 - 安装时候出现error2503（Windows server大部分情况下没有管理员权限）
 	- 解决方法：
-	```
+
+	```shell
 管理员命令行安装
 复制安装包到c盘
 1.运行CMD（以管理员权限运行）
 2.进入c盘根目录
 3.输入以下命令： msiexec /package "your_package_name.msi"
 	```	
+
 ### 安装：
 - 统一使用vcpkg包管理器进行依赖库管理，可以配合vs联合使用，省略交叉编译和配置环境变量等过程。
 	- 依赖安装：
@@ -199,8 +201,10 @@ cd vcpkg
 .\vcpkg integrate install
 #如果没有进行集成，可以在vs中是手动配置参考http://www.cppcns.com/ruanjian/c/712786.html
 ```
+
 	- protobuf验证：
 		 - contacts.proto 文件
+
 ```c++
 // 首行：语法指定行（proto2）
 syntax = "proto2";
@@ -212,7 +216,9 @@ message PeopleInfo {
   optional int32 age = 2;    // 年龄（proto2 必须声明 required/optional/repeated）
 }
 ```
+
 		- test.cc 文件
+
 ```c++
 #include <iostream> 
 #include "contacts.pb.h"
@@ -249,6 +255,7 @@ int main() {
 ```
 
 	- boost验证：
+    
 ```c++
 #include <IOStream>
 #include <fstream>
