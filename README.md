@@ -216,7 +216,7 @@ message PeopleInfo {
   optional int32 age = 2;    // 年龄（proto2 必须声明 required/optional/repeated）
 }
 ```
-
+-
 	- test.cc 文件
 
 ```c++
@@ -253,8 +253,7 @@ int main() {
     return 0;
 }
 ```
-
-	- boost验证：
+- boost验证：
 
 ```c++
 #include <IOStream>
