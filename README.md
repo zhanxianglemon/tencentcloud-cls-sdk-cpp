@@ -1,39 +1,37 @@
 # 描述
 
-tencent-log-sdk-cpp 是C++用户日志结构化上传的SDK，采用轻量的设计模式，简单易用可快速上手.支持同步模式以及异步模式。具体参见如下的demo
+tencent-log-sdk-cpp 是C++用户日志结构化上传的SDK，采用轻量的设计模式，简单易用可快速上手、支持同步模式以及异步模式。具体参见如下的demo
 
 ## 如何使用
 
 ### 依赖
-
-- `protobuf` require version protobuf 2.6.1
-  - PB 描述文件是通信双方约定的数据交换格式，上传日志时须将规定的协议格式编译成对应语言版本的调用接口，然后添加到工程代码里。参见[文档](https://cloud.tencent.com/document/product/614/16873)
+- 使用vs2022或其他版本
+- 使用vcpkg进行统一管理进行安装
+- `protobuf` 
+  - PB 描述文件是通信双方约定的数据交换格式，上传日志时须将规定的协议格式编译成对应语言版本的调用接口，然后添加到工程代码里。
 - curl 可使用系统自带的工具或者自己安装即可
 - boost 依赖boot库
 - `openssl` 签名的计算依赖openssl,这里建议使用[官网](https://www.openssl.org/source/) 提供的1.1.1版本，签名的方式参见[文档](https://cloud.tencent.com/document/product/614/12445)
-
-
+测试依赖：
+- `gtest`
+- `benchmark`
 
 ### 异步模式
 
 
 #### 使用步骤
 
-- step1:cd到当前工程目录下面
-- step2:执行命令 cmake .
-- step3:执行命令 make
-  以上命令执行完了之后，会在当前工程目录下面生成如下文件
-  - 生成ibclssdk.a、libclssdk.so
-  - cls_log.pb.h和cls_log.pb.cc文件,cls_log.pb.h和cls_log.pb.cc文件是日志上传的协议格式。
-  - logproducerconfig.pb.h 和logproducerconfig.pb.cc文件，该文件是配置相关的设置信息。具体使用可参考demo中的使用
-- step3:执行命令 make install 进行安装
+- step1:使用vs打开代码目录
+- step2:配置release编译器
+- step3:生产解决方案
+- step3:生成并运行启动器
 
 #### 配置说明logproducerconfig.proto
 
 | 参数               | 类型  | 描述                                                         |
 | ------------------ | ----- | ------------------------------------------------------------ |
 | TotalSizeLnBytes   | Int64 | 实例能缓存的日志大小上限，默认为 100MB。                     |
-| MaxSendWorkerCount | Int64 | client能并发的最多"goroutine"的数量，默认为50                |
+| MaxSendWorkerCount | Int64 | client能并发的最多线程的数量，默认为50                |
 | MaxBlockSec        | Int   | 如果client可用空间不足，调用者在 send 方法上的最大阻塞时间，默认为 60 秒。 如果超过这个时间后所需空间仍无法得到满足，send 方法会抛出TimeoutException。如果将该值设为0，当所需空间无法得到满足时，send 方法会立即抛出 TimeoutException。如果您希望 send 方法一直阻塞直到所需空间得到满足，可将该值设为负数。 |
 | MaxBatchSize       | Int64 | 当一个Batch中缓存的日志大小大于等于 batchSizeThresholdInBytes 时，该 batch 将被发送，默认为 512 KB，最大可设置成 5MB。 |
 | LingerMs           | Int64 | Batch从创建到可发送的逗留时间，默认为 2 秒，最小可设置成 100 毫秒。 |
@@ -47,16 +45,15 @@ tencent-log-sdk-cpp 是C++用户日志结构化上传的SDK，采用轻量的设
 - SecretId和SecretKey为云API密钥，密钥信息获取请前往[密钥获取](https://console.cloud.tencent.com/cam/capi)。并请确保密钥关联的账号具有相应的[SDK上传日志权限](https://cloud.tencent.com/document/product/614/68374#.E4.BD.BF.E7.94.A8-api-.E4.B8.8A.E4.BC.A0.E6.95.B0.E6.8D.AE)
 
 
-```
-#include "producerclient.h"
-#include "common.h"
+```c++
+#include "cls/producerclient.h"
+#include "cls/common.h"
 #include "cls_logs.pb.h"
 #include "logproducerconfig.pb.h"
 #include <string>
 #include <iostream>
-#include <unistd.h>
-#include "result.h"
-#include "error.h"
+#include "cls/result.h"
+#include "cls/error.h"
 using namespace tencent_log_sdk_cpp_v2;
 using namespace std;
 
@@ -70,7 +67,7 @@ public:
     void Fail(PostLogStoreLogsResponse result) override 
     { 
         std::cout << result.Printf() << std::endl; 
-        std::cout<<result.loggroup_.ShortDebugString().c_str()<<std::endl;
+        // std::cout<<result.loggroup_.ShortDebugString().c_str()<<std::endl;
     }
 };
 
@@ -78,10 +75,11 @@ public:
 int main()
 {
     cls_config::LogProducerConfig config;
-    config.set_endpoint("ap-guangzhou.cls.tencentcs.com");
+    config.set_endpoint("ap-guangzhou.cls.tencentyun.com");
     config.set_acceskeyid("");
     config.set_accesskeysecret("");
     std::string topic = "";
+
     auto client = std::make_shared<ProducerClient>(config);
     auto callback = std::make_shared<UserResult>();
     client->Start();
@@ -93,31 +91,26 @@ int main()
     content->set_value("this my test");
     PostLogStoreLogsResponse ret = client->PostLogStoreLogs(topic, log, callback);
     if(ret.statusCode != 0){
-        cout<<ret.content<<endl;
+        cout<<ret.content<<endl; 
     }
     client->LogProducerEnvDestroy();
 
     return 0;
 }
 
+
 ```
 
-- 编译
-
-  ```
-  g++ -o sample sample.cpp -std=c++11  -O2  -L. -lclssdk -lcurl -lprotobuf -lssl -lcrypto -lboost_thread
-  ```
-
-- 执行./sample 运行生成的二进制程序包，可登陆[腾讯云平台](https://console.cloud.tencent.com/cls/search)查看日志是否上传成功
+- 运行生成的exe程序包，可登陆[腾讯云平台](https://console.cloud.tencent.com/cls/search)查看日志是否上传成功
 
 ### 同步模式
 
 #### 使用说明
 
-- step1:cd到当前工程目录下面
-- step2:执行命令 cmake .
-- step3:执行命令 make 以上命令执行完了之后，会在当前工程目录下面生成libclssdk.a、libclssdk.so以及相应的cls_log.pb.h和cls_log.pb.cc文件方便项目中使用
-- step3:执行命令 make install 进行安装
+- step1:使用vs打开代码目录
+- step2:配置release编译器
+- step3:生产解决方案
+- step3:生成并运行启动器
 
 #### 同步demo: syncsample.cpp 
 
@@ -164,37 +157,26 @@ int main(int argc,char ** argv)
 
 ```
 
-- 编译
-
-```
-  g++ -o syncsample  syncsample.cpp -std=c++11  -O2  -L. -lclssdk -lcurl -lprotobuf -lssl -lcrypto -lboost_thread
-```
 
 ## FAQ
 
-- ### 安装protobuf出现报错
+- 如果不使用vcpg进行配置，在分别安装依赖时，需要判断依赖之间是否会出现冲突，造成可以编译但不能运行的问题（很难排查）
 
-  ```shell
-  error while loading shared libraries: libprotobuf.so.9: cannot open shared object file: No such file or directory
-  ```
+- 编译时将cpkg的installed的x64-windows移动到代码同目录下，或者更改makelist中的位置
 
-  - 解决
+- 使用vs进行编译的时候出现error，显示不安全使用：预处理器增加_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS
 
-    - 查看protobuf.so文件是在哪里，执行命令
+- 编译test进行单测时，需要选择c++17及以上的编译器进行编译
 
-      ```shell
-      whereis libprotobuf.so.9
-      ```
-
-    - 执行cat /etc/ld.so.conf 查看是否有第一步的路径
-
-    - 如果发现没有的话，把第一步输出的路径，则添加到ld.so.conf
-
-    - 执行ldconfig加载文件
-
-      ```shell
-      ldconfig
-      ```
+- 安装时候出现error2503（Windows server大部分情况下没有管理员权限）
+	- 解决方法：
+	```
+管理员命令行安装
+复制安装包到c盘
+1.运行CMD（以管理员权限运行）
+2.进入c盘根目录
+3.输入以下命令： msiexec /package "your_package_name.msi"
+	```
 
 - ### 代码说明
 
@@ -283,5 +265,3 @@ int main(int argc,char ** argv)
   ├── utils.cpp
   └── utils.h
   ```
-
-  
