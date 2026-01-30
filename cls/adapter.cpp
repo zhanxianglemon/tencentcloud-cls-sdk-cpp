@@ -143,7 +143,7 @@ time_t CodecTool::DecodeDateString(const std::string dateString, const std::stri
             std::string("Failed to convert tm to time_t for date string:") + dateString + ", format:" + dateFormat);
     }
 
-    // ï¿½ï¿½È¡ï¿½ï¿½Ç°Ê±ï¿½ï¿½Æ«ï¿½Æ£ï¿½ï¿½ï¿½ï¿½Ó£ï¿½
+    // »ñÈ¡µ±Ç°Ê±ÇøÆ«ÒÆ£¨·ÖÖÓ£©
     TIME_ZONE_INFORMATION tzInfo;
     DWORD tzResult = GetTimeZoneInformation(&tzInfo);
     if (tzResult == TIME_ZONE_ID_INVALID) {
@@ -290,7 +290,7 @@ void LOGAdapter::Send(const string& httpMethod, const string& host, const int32_
         if (httpMethod == HTTP_POST)
         {
             curl_easy_setopt(curl, CURLOPT_POST, 1);
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, static_cast<curl_off_t>(body.size()));
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, body.size());
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
         }
         else if (httpMethod == HTTP_DELETE)
@@ -300,7 +300,7 @@ void LOGAdapter::Send(const string& httpMethod, const string& host, const int32_
         else if (httpMethod == HTTP_PUT)
         {
             curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, HTTP_PUT);
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, static_cast<curl_off_t>(body.size()));
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, body.size());
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
         }
 
